@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Positif / Négatif</title>
+
+<style>
+body{
+    margin:0;
+    background:radial-gradient(circle at top,#1b1f2a,#0c0f16);
+    font-family:Arial, sans-serif;
+    color:white;
+    height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+}
+.container{
+    width:95%;
+    text-align:center;
+}
+.buttons{
+    display:flex;
+    justify-content:center;
+    gap:20px;
+}
+button{
+    width:160px;
+    height:60px;
+    font-size:20px;
+    border:none;
+    border-radius:14px;
+    cursor:pointer;
+}
+.positif{background:#1f8f4d;color:white;}
+.negatif{background:#b02a2a;color:white;}
+.lottery{
+    margin-top:20px;
+    background:#444;
+    width:220px;
+}
+#boule{
+    margin:20px auto;
+    width:100px;
+    height:100px;
+    border-radius:50%;
+    background:linear-gradient(145deg,#666,#222);
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    font-size:30px;
+    animation:none;
+}
+.spin{
+    animation:spin 1s linear infinite;
+}
+@keyframes spin{
+    from{transform:rotate(0deg);}
+    to{transform:rotate(360deg);}
+}
+img{
+    margin-top:20px;
+    max-width:100%;
+    max-height:45vh;
+    border-radius:14px;
+}
+.admin{
+    margin-top:20px;
+    border-top:1px solid #333;
+    padding-top:10px;
+}
+.thumb{
+    width:50px;
+    height:50px;
+    object-fit:cover;
+    border-radius:8px;
+    margin:4px;
+    cursor:pointer;
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+
+    <div class="buttons">
+        <button class="positif" onclick="showRandom('positif')">POSITIF</button>
+        <button class="negatif" onclick="showRandom('negatif')">NÉGATIF</button>
+    </div>
+
+    <button class="lottery" onclick="tirage()">🎱 Tirage au sort</button>
+
+    <div id="boule">🎱</div>
+    <div id="result"></div>
+
+    <img id="image">
+
+    <div class="admin">
+        <h3>Gestion des images</h3>
+        <select id="type">
+            <option value="positif">Positif</option>
+            <option value="negatif">Négatif</option>
+        </select>
+        <input type="file" accept="image/*" onchange="addImage(event)">
+        <div id="gallery"></div>
+    </div>
+
+</div>
+
+<script>
+let data = JSON.parse(localStorage.getItem("images")) || {positif:[],negatif:[]};
+
+function save(){
+    localStorage.setItem("images",JSON.stringify(data));
+    renderGallery();
+}
+
+function addImage(e){
+    const file=e.target.files[0];
+    if(!file) return;
+    const r=new FileReader();
+    r.onload=()=>{
+        data[type.value].push(r.result);
+        save();
+    };
+    r.readAsDataURL(file);
+}
+
+function showRandom(type){
+    if(data[type].length===0) return alert("Aucune image !");
+    image.src=data[type][Math.floor(Math.random()*data[type].length)];
+    result.innerText=type.toUpperCase();
+}
+
+function tirage(){
+    boule.classList.add("spin");
+    result.innerText="La boule tourne...";
+    image.src="";
+    setTimeout(()=>{
+        boule.classList.remove("spin");
+        const choix=Math.random()<0.5?"positif":"negatif";
+        result.innerText="🎱 Résultat : "+choix.toUpperCase();
+        showRandom(choix);
+    },2000);
+}
+
+function renderGallery(){
+    gallery.innerHTML="";
+    ["positif","negatif"].forEach(type=>{
+        data[type].forEach((img,i)=>{
+            const t=document.createElement("img");
+            t.src=img;
+            t.className="thumb";
+            t.onclick=()=>{
+                if(confirm("Supprimer ?")){
+                    data[type].splice(i,1);
+                    save();
+                }
+            };
+            gallery.appendChild(t);
+        });
+    });
+}
+renderGallery();
+</script>
+</body>
+</html>
